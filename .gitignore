@@ -1,0 +1,41 @@
+# dependencies
+node_modules/
+
+# build
+dist/
+
+# env files
+.env
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# TypeScript
+*.tsbuildinfo
+
+# coverage
+coverage/
+
+# uploads
+uploads/
+
+# temporary files
+tmp/
+temp/
+
+# generated files
+*.pid
+*.seed
+*.pid.lock
