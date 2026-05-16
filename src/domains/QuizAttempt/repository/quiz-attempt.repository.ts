@@ -1,11 +1,10 @@
 import { Service } from "typedi";
+
 import { Repository } from "typeorm";
 
 import { AppDataSource } from "../../../db/db";
 
 import { QuizAttempt } from "../entities/quiz-attempt.entity";
-
-import { UpdateQuizAttemptDto } from "../dto/quiz-attempt.dto";
 
 @Service()
 export class QuizAttemptRepository {
@@ -37,6 +36,22 @@ export class QuizAttemptRepository {
         "quizAttempt.answers",
         "answers",
       )
+      .leftJoinAndSelect(
+        "answers.question",
+        "question",
+      )
+      .leftJoinAndSelect(
+        "answers.questionVersion",
+        "questionVersion",
+      )
+      .leftJoinAndSelect(
+        "answers.selectedOptions",
+        "selectedOptions",
+      )
+      .leftJoinAndSelect(
+        "selectedOptions.questionOption",
+        "questionOption",
+      )
       .getMany();
   }
 
@@ -59,6 +74,22 @@ export class QuizAttemptRepository {
         "quizAttempt.answers",
         "answers",
       )
+      .leftJoinAndSelect(
+        "answers.question",
+        "question",
+      )
+      .leftJoinAndSelect(
+        "answers.questionVersion",
+        "questionVersion",
+      )
+      .leftJoinAndSelect(
+        "answers.selectedOptions",
+        "selectedOptions",
+      )
+      .leftJoinAndSelect(
+        "selectedOptions.questionOption",
+        "questionOption",
+      )
       .where(
         "quizAttempt.publicId = :id",
         { id },
@@ -75,23 +106,6 @@ export class QuizAttemptRepository {
     return this.repository.save(item);
   }
 
-  async update(
-    id: string,
-    data: UpdateQuizAttemptDto,
-  ): Promise<QuizAttempt | null> {
-    await this.repository.update(
-      {
-        publicId: id,
-      },
-      {
-        attemptNumber:
-          data.attemptNumber,
-      },
-    );
-
-    return this.findById(id);
-  }
-
   async delete(
     id: string,
   ): Promise<boolean> {
@@ -104,4 +118,4 @@ export class QuizAttemptRepository {
       (result.affected ?? 0) > 0
     );
   }
-} 
+}

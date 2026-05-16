@@ -32,7 +32,11 @@ export class QuestionRepository {
       .leftJoinAndSelect(
         "question.versions",
         "versions",
-      )
+    )
+      .leftJoinAndSelect(
+       "versions.options",
+       "options",
+)
       .leftJoinAndSelect(
         "question.quizQuestions",
         "quizQuestions",
@@ -87,21 +91,7 @@ export class QuestionRepository {
     return this.repository.save(item);
   }
 
-  async update(
-    id: string,
-    data: UpdateQuestionDto,
-  ): Promise<Question | null> {
-    await this.repository.update(
-      {
-        publicId: id,
-      },
-      {
-        ...data,
-      },
-    );
 
-    return this.findById(id);
-  }
 
   async delete(
     id: string,

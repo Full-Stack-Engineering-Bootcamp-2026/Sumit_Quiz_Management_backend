@@ -104,50 +104,5 @@ export class QuestionVersionService {
     return this.mapToDto(item);
   }
 
-  public async update(
-    id: string,
-    data: UpdateQuestionVersionDto,
-  ): Promise<QuestionVersionOutDto> {
-    this.logger.info(
-      `Updating question version: ${id}`,
-    );
 
-    const existing =
-      await this.repository.findById(id);
-
-    if (!existing) {
-      throw new NotFoundException(
-        `Question version with ID ${id} not found`,
-      );
-    }
-
-    const updated =
-      await this.repository.update(
-        id,
-        data,
-      );
-
-    return this.mapToDto(
-      updated as QuestionVersion,
-    );
-  }
-
-  public async delete(
-    id: string,
-  ): Promise<void> {
-    this.logger.info(
-      `Deleting question version: ${id}`,
-    );
-
-    const existing =
-      await this.repository.findById(id);
-
-    if (!existing) {
-      throw new NotFoundException(
-        `Question version with ID ${id} not found`,
-      );
-    }
-
-    await this.repository.delete(id);
-  }
 }

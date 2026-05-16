@@ -12,13 +12,31 @@ export const createQuizAttemptSchema =
         .uuid()
         .required(),
 
-    attemptNumber:
-      Joi.number()
+    answers:
+      Joi.array()
+        .items(
+          Joi.object({
+            questionVersionId:
+              Joi.string()
+                .uuid()
+                .required(),
+
+            answerText:
+              Joi.string()
+                .allow(
+                  "",
+                  null,
+                )
+                .optional(),
+
+            selectedOptionIds:
+              Joi.array()
+                .items(
+                  Joi.string().uuid(),
+                )
+                .optional(),
+          }),
+        )
+        .min(1)
         .required(),
   });
-
-export const updateQuizAttemptSchema =
-  Joi.object({
-    attemptNumber:
-      Joi.number(),
-  }).min(1);

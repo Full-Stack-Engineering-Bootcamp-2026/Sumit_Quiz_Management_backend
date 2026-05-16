@@ -1,16 +1,13 @@
-import { Request, Response } from "express";
+import {
+  Request,
+  Response,
+} from "express";
+
 import { Service } from "typedi";
 
 import { QuestionVersionService } from "../service/question-version.service";
 
-import {
-  CreateQuestionVersionDto,
-  UpdateQuestionVersionDto,
-} from "../dto/question-version.dto";
-
 import { HttpStatus } from "../../../common/constants/http-status.constants";
-
-import { SuccessMessages } from "../../../common/constants/success-messages.constants";
 
 import { generateResponse } from "../../../common/utils/response.util";
 
@@ -28,7 +25,9 @@ export class QuestionVersionController {
       await this.service.getAll();
 
     return generateResponse(res, {
-      statusCode: HttpStatus.OK,
+      statusCode:
+        HttpStatus.OK,
+
       data,
     });
   }
@@ -43,55 +42,10 @@ export class QuestionVersionController {
       );
 
     return generateResponse(res, {
-      statusCode: HttpStatus.OK,
+      statusCode:
+        HttpStatus.OK,
+
       data,
-    });
-  }
-
-  public async create(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    const data =
-      await this.service.create(
-        req.body as CreateQuestionVersionDto,
-      );
-
-    return generateResponse(res, {
-      statusCode: HttpStatus.CREATED,
-      message: SuccessMessages.CREATED,
-      data,
-    });
-  }
-
-  public async update(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    const data =
-      await this.service.update(
-        req.params.id as string,
-        req.body as UpdateQuestionVersionDto,
-      );
-
-    return generateResponse(res, {
-      statusCode: HttpStatus.OK,
-      message: SuccessMessages.UPDATED,
-      data,
-    });
-  }
-
-  public async delete(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    await this.service.delete(
-      req.params.id as string,
-    );
-
-    return generateResponse(res, {
-      statusCode: HttpStatus.OK,
-      message: SuccessMessages.DELETED,
     });
   }
 }

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Service } from "typedi";
 
-import { QuizAttemptController } from "../controller/quiz-attempt.controller";
+import { QuizQuestionController } from "../controller/quiz-question.controller";
 
 import { authenticate } from "../../../common/middleware/authenticate.middleware";
 
@@ -9,14 +9,17 @@ import { validate } from "../../../common/middleware/validate.middleware";
 
 import { asyncHandler } from "../../../common/utils/async-handler";
 
-import { createQuizAttemptSchema} from "../validator/quiz-attempt.validator";
+import {
+  createQuizQuestionSchema,
+  updateQuizQuestionSchema,
+} from "../validator/quiz-question.validator";
 
 @Service()
-export class QuizAttemptRoutes {
+export class QuizQuestionRoutes {
   public router: Router;
 
   constructor(
-    private readonly controller: QuizAttemptController,
+    private readonly controller: QuizQuestionController,
   ) {
     this.router = Router();
 
@@ -52,7 +55,7 @@ export class QuizAttemptRoutes {
       "/",
       authenticate,
       validate(
-        createQuizAttemptSchema,
+        createQuizQuestionSchema,
       ),
       asyncHandler(
         this.controller.create.bind(
@@ -61,7 +64,19 @@ export class QuizAttemptRoutes {
       ),
     );
 
- 
+    this.router.put(
+      "/:id",
+      authenticate,
+      validate(
+        updateQuizQuestionSchema,
+      ),
+      asyncHandler(
+        this.controller.update.bind(
+          this.controller,
+        ),
+      ),
+    );
+
     this.router.delete(
       "/:id",
       authenticate,

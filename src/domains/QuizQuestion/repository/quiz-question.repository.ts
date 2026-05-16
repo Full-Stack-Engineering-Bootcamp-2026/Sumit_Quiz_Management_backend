@@ -1,93 +1,92 @@
 import { Service } from "typedi";
-
 import { Repository } from "typeorm";
 
 import { AppDataSource } from "../../../db/db";
 
-import { Quiz } from "../entities/quiz.entity";
+import { QuizQuestion } from "../entities/quiz-question.entity";
+
+import { UpdateQuizQuestionDto } from "../dto/quiz-question.dto";
 
 @Service()
-export class QuizRepository {
-  private repository: Repository<Quiz>;
+export class QuizQuestionRepository {
+  private repository: Repository<QuizQuestion>;
 
   constructor() {
     this.repository =
       AppDataSource.getRepository(
-        Quiz,
+        QuizQuestion,
       );
   }
 
   async findAll(): Promise<
-    Quiz[]
+    QuizQuestion[]
   > {
     return this.repository
       .createQueryBuilder(
+        "quizQuestion",
+      )
+      .leftJoinAndSelect(
+        "quizQuestion.quiz",
         "quiz",
       )
       .leftJoinAndSelect(
-        "quiz.createdBy",
-        "createdBy",
-      )
-      .leftJoinAndSelect(
-        "quiz.quizQuestions",
-        "quizQuestions",
-      )
-      .leftJoinAndSelect(
-        "quizQuestions.question",
+        "quizQuestion.question",
         "question",
       )
       .leftJoinAndSelect(
-        "quizQuestions.questionVersion",
+        "quizQuestion.questionVersion",
         "questionVersion",
-      )
-      .leftJoinAndSelect(
-        "quiz.attempts",
-        "attempts",
       )
       .getMany();
   }
 
   async findById(
     id: string,
-  ): Promise<Quiz | null> {
+  ): Promise<QuizQuestion | null> {
     return this.repository
       .createQueryBuilder(
+        "quizQuestion",
+      )
+      .leftJoinAndSelect(
+        "quizQuestion.quiz",
         "quiz",
       )
       .leftJoinAndSelect(
-        "quiz.createdBy",
-        "createdBy",
-      )
-      .leftJoinAndSelect(
-        "quiz.quizQuestions",
-        "quizQuestions",
-      )
-      .leftJoinAndSelect(
-        "quizQuestions.question",
+        "quizQuestion.question",
         "question",
       )
       .leftJoinAndSelect(
-        "quizQuestions.questionVersion",
+        "quizQuestion.questionVersion",
         "questionVersion",
       )
-      .leftJoinAndSelect(
-        "quiz.attempts",
-        "attempts",
-      )
       .where(
-        "quiz.publicId = :id",
+        "quizQuestion.publicId = :id",
         { id },
       )
       .getOne();
   }
 
   async create(
-    data: Partial<Quiz>,
-  ): Promise<Quiz> {
+    data: Partial<QuizQuestion>,
+  ): Promise<QuizQuestion> {
     const item =
       this.repository.create(data);
 
     return this.repository.save(item);
+  }
+
+  async update(
+    id: string,
+    data: UpdateQuizQuestionDto,
+  ): Promise<QuizQuestion | null> {
+    await this.repository.update(
+      {
+        publicId: id,
+      },
+      {},
+    );
+
+    return this.findById(id);
   }
 
   async delete(

@@ -1,12 +1,20 @@
 import { Service } from "typedi";
 
-import { QuizRepository } from "../repository/quiz.repository";
+import { AppDataSource } from "../../../db/db";
 
 import { LoggerService } from "../../../common/utils/logger.service";
 
 import { NotFoundException } from "../../../common/exceptions";
 
+import { QuizRepository } from "../repository/quiz.repository";
+
 import { Quiz } from "../entities/quiz.entity";
+
+import { QuizQuestion } from "../../QuizQuestion/entities/quiz-question.entity";
+
+import { QuestionVersion } from "../../QuestionVersion/entities/question-version.entity";
+
+import { User } from "../../User/entities/user.entity";
 
 import {
   QuizOutDto,
@@ -33,6 +41,20 @@ export class QuizService {
       createdById:
         item.createdBy.publicId,
 
+      questions:
+        item.quizQuestions?.map(
+          (quizQuestion) => ({
+            questionId:
+              quizQuestion.question
+                .publicId,
+
+            questionVersionId:
+              quizQuestion
+                .questionVersion
+                .publicId,
+          }),
+        ) || [],
+
       createdAt:
         item.createdAt,
     };
@@ -45,11 +67,11 @@ export class QuizService {
       "Fetching all quizzes",
     );
 
-    const items =
+    const quizzes =
       await this.repository.findAll();
 
-    return items.map((item) =>
-      this.mapToDto(item),
+    return quizzes.map((quiz) =>
+      this.mapToDto(quiz),
     );
   }
 
@@ -57,19 +79,23 @@ export class QuizService {
     id: string,
   ): Promise<QuizOutDto> {
     this.logger.debug(
-      `Fetching quiz with ID: ${id}`,
+      `Fetching quiz with ID ${id}`,
     );
 
-    const item =
-      await this.repository.findById(id);
+    const quiz =
+      await this.repository.findById(
+        id,
+      );
 
-    if (!item) {
+    if (!quiz) {
       throw new NotFoundException(
         `Quiz with ID ${id} not found`,
       );
     }
 
-    return this.mapToDto(item);
+    return this.mapToDto(
+      quiz,
+    );
   }
 
   public async create(
@@ -79,12 +105,75 @@ export class QuizService {
       "Creating quiz",
     );
 
-    const item =
-      await this.repository.create({
-        title: data.title,
-      });
+    return AppDataSource.transaction(
+      async (manager) => {
+        const quiz =
+          manager.create(
+            Quiz,
+            {
+              title:
+                data.title,
 
-    return this.mapToDto(item);
+              createdBy: {
+                publicId:
+                  data.createdById,
+              } as User,
+            },
+          );
+
+        const savedQuiz =
+          await manager.save(
+            quiz,
+          );
+
+        const questionVersions =
+          await manager
+            .createQueryBuilder(
+              QuestionVersion,
+              "questionVersion",
+            )
+            .leftJoinAndSelect(
+              "questionVersion.question",
+              "question",
+            )
+            .where(
+              "questionVersion.publicId IN (:...ids)",
+              {
+                ids: data.questionVersionIds,
+              },
+            )
+            .getMany();
+
+        const quizQuestions =
+          questionVersions.map(
+            (questionVersion) =>
+              manager.create(
+                QuizQuestion,
+                {
+                  quiz:
+                    savedQuiz,
+
+                  question:
+                    questionVersion.question,
+
+                  questionVersion,
+                },
+              ),
+          );
+
+        const savedMappings =
+          await manager.save(
+            quizQuestions,
+          );
+
+        savedQuiz.quizQuestions =
+          savedMappings;
+
+        return this.mapToDto(
+          savedQuiz,
+        );
+      },
+    );
   }
 
   public async update(
@@ -92,26 +181,93 @@ export class QuizService {
     data: UpdateQuizDto,
   ): Promise<QuizOutDto> {
     this.logger.info(
-      `Updating quiz: ${id}`,
+      `Updating quiz ${id}`,
     );
 
-    const existing =
-      await this.repository.findById(id);
+    const existingQuiz =
+      await this.repository.findById(
+        id,
+      );
 
-    if (!existing) {
+    if (!existingQuiz) {
       throw new NotFoundException(
         `Quiz with ID ${id} not found`,
       );
     }
 
-    const updated =
-      await this.repository.update(
-        id,
-        data,
-      );
+    return AppDataSource.transaction(
+      async (manager) => {
+        if (data.title) {
+          existingQuiz.title =
+            data.title;
 
-    return this.mapToDto(
-      updated as Quiz,
+          await manager.save(
+            existingQuiz,
+          );
+        }
+
+        if (
+          data.questionVersionIds
+        ) {
+          await manager.delete(
+            QuizQuestion,
+            {
+              quiz: {
+                id: existingQuiz.id,
+              },
+            },
+          );
+
+          const questionVersions =
+            await manager
+              .createQueryBuilder(
+                QuestionVersion,
+                "questionVersion",
+              )
+              .leftJoinAndSelect(
+                "questionVersion.question",
+                "question",
+              )
+              .where(
+                "questionVersion.publicId IN (:...ids)",
+                {
+                  ids: data.questionVersionIds,
+                },
+              )
+              .getMany();
+
+          const quizQuestions =
+            questionVersions.map(
+              (
+                questionVersion,
+              ) =>
+                manager.create(
+                  QuizQuestion,
+                  {
+                    quiz:
+                      existingQuiz,
+
+                    question:
+                      questionVersion.question,
+
+                    questionVersion,
+                  },
+                ),
+            );
+
+          const savedMappings =
+            await manager.save(
+              quizQuestions,
+            );
+
+          existingQuiz.quizQuestions =
+            savedMappings;
+        }
+
+        return this.mapToDto(
+          existingQuiz,
+        );
+      },
     );
   }
 
@@ -119,18 +275,22 @@ export class QuizService {
     id: string,
   ): Promise<void> {
     this.logger.info(
-      `Deleting quiz: ${id}`,
+      `Deleting quiz ${id}`,
     );
 
-    const existing =
-      await this.repository.findById(id);
+    const existingQuiz =
+      await this.repository.findById(
+        id,
+      );
 
-    if (!existing) {
+    if (!existingQuiz) {
       throw new NotFoundException(
         `Quiz with ID ${id} not found`,
       );
     }
 
-    await this.repository.delete(id);
+    await this.repository.delete(
+      id,
+    );
   }
 }

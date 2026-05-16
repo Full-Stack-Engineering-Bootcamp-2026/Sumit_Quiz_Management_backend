@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import { Service } from "typedi";
 
-import { QuizAttemptService } from "../service/quiz-attempt.service";
+import { QuizQuestionService } from "../service/quiz-question.service";
 
 import {
-  CreateQuizAttemptDto,
-  UpdateQuizAttemptDto,
-} from "../dto/quiz-attempt.dto";
+  CreateQuizQuestionDto,
+  UpdateQuizQuestionDto,
+} from "../dto/quiz-question.dto";
 
 import { HttpStatus } from "../../../common/constants/http-status.constants";
 
@@ -15,9 +15,9 @@ import { SuccessMessages } from "../../../common/constants/success-messages.cons
 import { generateResponse } from "../../../common/utils/response.util";
 
 @Service()
-export class QuizAttemptController {
+export class QuizQuestionController {
   constructor(
-    private readonly service: QuizAttemptService,
+    private readonly service: QuizQuestionService,
   ) {}
 
   public async getAll(
@@ -54,7 +54,7 @@ export class QuizAttemptController {
   ): Promise<Response> {
     const data =
       await this.service.create(
-        req.body as CreateQuizAttemptDto,
+        req.body as CreateQuizQuestionDto,
       );
 
     return generateResponse(res, {
@@ -64,6 +64,22 @@ export class QuizAttemptController {
     });
   }
 
+  public async update(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    const data =
+      await this.service.update(
+        req.params.id as string,
+        req.body as UpdateQuizQuestionDto,
+      );
+
+    return generateResponse(res, {
+      statusCode: HttpStatus.OK,
+      message: SuccessMessages.UPDATED,
+      data,
+    });
+  }
 
   public async delete(
     req: Request,

@@ -9,7 +9,7 @@ import {
 } from "typeorm";
 
 import { User } from "../../User/entities/user.entity";
-import { QuizQuestion } from "../../QuizQuestion/entities/QuizQuestion.entity";
+import { QuizQuestion } from "../../QuizQuestion/entities/quiz-question.entity";
 import { QuizAttempt } from "../../QuizAttempt/entities/quiz-attempt.entity";
 
 @Entity("quizzes")

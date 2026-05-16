@@ -1,36 +1,90 @@
 import { Router } from "express";
 
 import { Service } from "typedi";
-import { loginValidationSchema } from "../validator/login.validation";
-import { registerValidationSchema } from "../validator/register.validation";
+
 import { UserController } from "../controller/user.controller";
-import { validate } from "../../../common/middleware/validate.middleware";
+
+import { loginValidationSchema } from "../validator/login.validation";
+
+import { registerValidationSchema } from "../validator/register.validation";
+
+import {
+  validate,
+  validateLogin,
+} from "../../../common/middleware/validate.middleware";
+
+import { asyncHandler } from "../../../common/utils/async-handler";
+
+import { authenticate } from "../../../common/middleware/authenticate.middleware";
+
+import { requireRole } from "../../../common/middleware/authorize.middleware";
+
+import { UserRole } from "../entities/user.entity";
 
 @Service()
 export class UserRoutes {
   public router: Router;
 
-  constructor(private readonly userController: UserController) {
+  constructor(
+    private readonly userController: UserController,
+  ) {
     this.router = Router();
 
     this.initializeRoutes();
   }
 
   private initializeRoutes(): void {
+    /**
+     * Public Login Route
+     */
     this.router.post(
       "/login",
-      validate(loginValidationSchema),
-      this.userController.login,
+
+      validateLogin(
+        loginValidationSchema,
+      ),
+
+      asyncHandler(
+        this.userController.login,
+      ),
     );
+
+    /**
+     * Public User Registration
+     */
     this.router.post(
       "/register/user",
-      validate(registerValidationSchema),
-      this.userController.registerUser,
+
+      validate(
+        registerValidationSchema,
+      ),
+
+      asyncHandler(
+        this.userController
+          .registerUser,
+      ),
     );
+
+    /**
+     * Admin Only Registration
+     */
     this.router.post(
       "/register/admin",
-      validate(registerValidationSchema),
-      this.userController.registerAdmin,
+
+      authenticate,
+
+      requireRole(
+        UserRole.ADMIN,
+      ),
+
+      validate(
+        registerValidationSchema,
+      ),
+
+      asyncHandler(
+        this.userController
+          .registerAdmin,
+      ),
     );
   }
 }

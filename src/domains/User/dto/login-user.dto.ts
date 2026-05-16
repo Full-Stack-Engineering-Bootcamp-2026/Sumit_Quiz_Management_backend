@@ -1,44 +1,31 @@
-/**
- * Output DTO — shape returned to the client
- */
-export interface ExampleOutDto {
-  id: string;
-  name: string;
-  col1: string;
-  col2: string;
-  col3: string;
-  createdAt: Date;
-  updatedAt: Date | null;
-  isActive: boolean;
-}
-export class LoginUserDto {
+// src/domains/Auth/dto/auth.dto.ts
+
+export interface LoginUserDto {
   email: string;
 
   password: string;
-}
-/**
- * Create DTO — fields required to create a new resource
- */
-export interface ExampleCreateDto {
-  name: string;
-  col1: string;
-  col2: string;
-  col3: string;
-}
-
-/**
- * Update DTO — all fields optional for partial update
- */
-export interface ExampleUpdateDto {
-  name?: string;
-  col1?: string;
-  col2?: string;
-  col3?: string;
-  isActive?: boolean;
 }
 
 export interface RegisterUserDto {
   name: string;
+
   email: string;
+
   password: string;
+}
+
+export interface AuthResponseDto {
+  token: string;
+
+  user: {
+    id: number;
+
+    publicId: string;
+
+    name: string;
+
+    email: string;
+
+    role: string;
+  };
 }

@@ -7,6 +7,16 @@ export interface QuizAttemptOutDto {
 
   attemptNumber: number;
 
+  answers: {
+    questionId: string;
+
+    questionVersionId: string;
+
+    answerText?: string;
+
+    selectedOptionIds?: string[];
+  }[];
+
   submittedAt: Date;
 }
 
@@ -15,9 +25,13 @@ export interface CreateQuizAttemptDto {
 
   quizId: string;
 
-  attemptNumber: number;
+  answers: {
+    questionVersionId: string;
+
+    answerText?: string;
+
+    selectedOptionIds?: string[];
+  }[];
 }
 
-export interface UpdateQuizAttemptDto {
-  attemptNumber?: number;
-}
+export interface UpdateQuizAttemptDto {}

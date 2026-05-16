@@ -74,33 +74,4 @@ export class QuestionVersionRepository {
 
     return this.repository.save(item);
   }
-
-  async update(
-    id: string,
-    data: UpdateQuestionVersionDto,
-  ): Promise<QuestionVersion | null> {
-    await this.repository.update(
-      {
-        publicId: id,
-      },
-      {
-        ...data,
-      },
-    );
-
-    return this.findById(id);
-  }
-
-  async delete(
-    id: string,
-  ): Promise<boolean> {
-    const result =
-      await this.repository.delete({
-        publicId: id,
-      });
-
-    return (
-      (result.affected ?? 0) > 0
-    );
-  }
 }
