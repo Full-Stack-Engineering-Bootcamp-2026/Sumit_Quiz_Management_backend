@@ -21,44 +21,28 @@ export class AttemptAnswerOptionService {
     private readonly logger: LoggerService,
   ) {}
 
-  private mapToDto(
-    item: AttemptAnswerOption,
-  ): AttemptAnswerOptionOutDto {
+  private mapToDto(item: AttemptAnswerOption): AttemptAnswerOptionOutDto {
     return {
       id: item.publicId,
 
-      attemptAnswerId:
-        item.attemptAnswer.publicId,
+      attemptAnswerId: item.attemptAnswer.publicId,
 
-      questionOptionId:
-        item.questionOption.publicId,
+      questionOptionId: item.questionOption.publicId,
     };
   }
 
-  public async getAll(): Promise<
-    AttemptAnswerOptionOutDto[]
-  > {
-    this.logger.debug(
-      "Fetching all attempt answer options",
-    );
+  public async getAll(): Promise<AttemptAnswerOptionOutDto[]> {
+    this.logger.debug("Fetching all attempt answer options");
 
-    const items =
-      await this.repository.findAll();
+    const items = await this.repository.findAll();
 
-    return items.map((item) =>
-      this.mapToDto(item),
-    );
+    return items.map((item) => this.mapToDto(item));
   }
 
-  public async getById(
-    id: string,
-  ): Promise<AttemptAnswerOptionOutDto> {
-    this.logger.debug(
-      `Fetching attempt answer option with ID: ${id}`,
-    );
+  public async getById(id: string): Promise<AttemptAnswerOptionOutDto> {
+    this.logger.debug(`Fetching attempt answer option with ID: ${id}`);
 
-    const item =
-      await this.repository.findById(id);
+    const item = await this.repository.findById(id);
 
     if (!item) {
       throw new NotFoundException(
@@ -72,25 +56,17 @@ export class AttemptAnswerOptionService {
   public async create(
     data: CreateAttemptAnswerOptionDto,
   ): Promise<AttemptAnswerOptionOutDto> {
-    this.logger.info(
-      "Creating attempt answer option",
-    );
+    this.logger.info("Creating attempt answer option");
 
-    const item =
-      await this.repository.create({});
+    const item = await this.repository.create({});
 
     return this.mapToDto(item);
   }
 
-  public async delete(
-    id: string,
-  ): Promise<void> {
-    this.logger.info(
-      `Deleting attempt answer option: ${id}`,
-    );
+  public async delete(id: string): Promise<void> {
+    this.logger.info(`Deleting attempt answer option: ${id}`);
 
-    const existing =
-      await this.repository.findById(id);
+    const existing = await this.repository.findById(id);
 
     if (!existing) {
       throw new NotFoundException(

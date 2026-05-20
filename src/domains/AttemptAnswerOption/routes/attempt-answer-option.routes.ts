@@ -15,9 +15,7 @@ import { createAttemptAnswerOptionSchema } from "../validator/attempt-answer-opt
 export class AttemptAnswerOptionRoutes {
   public router: Router;
 
-  constructor(
-    private readonly controller: AttemptAnswerOptionController,
-  ) {
+  constructor(private readonly controller: AttemptAnswerOptionController) {
     this.router = Router();
 
     this.addRoutes();
@@ -31,44 +29,26 @@ export class AttemptAnswerOptionRoutes {
     this.router.get(
       "/",
       authenticate,
-      asyncHandler(
-        this.controller.getAll.bind(
-          this.controller,
-        ),
-      ),
+      asyncHandler(this.controller.getAll.bind(this.controller)),
     );
 
     this.router.get(
       "/:id",
       authenticate,
-      asyncHandler(
-        this.controller.getById.bind(
-          this.controller,
-        ),
-      ),
+      asyncHandler(this.controller.getById.bind(this.controller)),
     );
 
     this.router.post(
       "/",
       authenticate,
-      validate(
-        createAttemptAnswerOptionSchema,
-      ),
-      asyncHandler(
-        this.controller.create.bind(
-          this.controller,
-        ),
-      ),
+      validate(createAttemptAnswerOptionSchema),
+      asyncHandler(this.controller.create.bind(this.controller)),
     );
 
     this.router.delete(
       "/:id",
       authenticate,
-      asyncHandler(
-        this.controller.delete.bind(
-          this.controller,
-        ),
-      ),
+      asyncHandler(this.controller.delete.bind(this.controller)),
     );
   }
 }

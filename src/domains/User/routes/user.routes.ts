@@ -25,66 +25,69 @@ import { UserRole } from "../entities/user.entity";
 export class UserRoutes {
   public router: Router;
 
-  constructor(
-    private readonly userController: UserController,
-  ) {
+  constructor(private readonly userController: UserController) {
     this.router = Router();
 
     this.initializeRoutes();
   }
 
   private initializeRoutes(): void {
-    /**
-     * Public Login Route
-     */
     this.router.post(
       "/login",
 
-      validateLogin(
-        loginValidationSchema,
-      ),
+      validateLogin(loginValidationSchema),
 
-      asyncHandler(
-        this.userController.login,
-      ),
+      asyncHandler(this.userController.login),
     );
 
-    /**
-     * Public User Registration
-     */
     this.router.post(
       "/register/user",
 
-      validate(
-        registerValidationSchema,
-      ),
+      validate(registerValidationSchema),
 
-      asyncHandler(
-        this.userController
-          .registerUser,
-      ),
+      asyncHandler(this.userController.registerUser),
     );
 
-    /**
-     * Admin Only Registration
-     */
     this.router.post(
       "/register/admin",
 
       authenticate,
 
-      requireRole(
-        UserRole.ADMIN,
-      ),
+      requireRole(UserRole.ADMIN),
 
-      validate(
-        registerValidationSchema,
-      ),
+      validate(registerValidationSchema),
 
-      asyncHandler(
-        this.userController
-          .registerAdmin,
-      ),
+      asyncHandler(this.userController.registerAdmin),
+    );
+
+    this.router.get(
+      "/",
+
+      authenticate,
+
+      requireRole(UserRole.ADMIN),
+
+      asyncHandler(this.userController.getAllUsers),
+    );
+
+    this.router.get(
+      "/:publicId",
+
+      authenticate,
+
+      requireRole(UserRole.ADMIN),
+
+      asyncHandler(this.userController.getUserByPublicId),
+    );
+
+    this.router.delete(
+      "/:publicId",
+
+      authenticate,
+
+      requireRole(UserRole.ADMIN),
+
+      asyncHandler(this.userController.deleteUser),
     );
   }
 }

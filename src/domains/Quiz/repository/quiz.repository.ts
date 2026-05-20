@@ -37,8 +37,20 @@ export class QuizRepository {
         "question",
       )
       .leftJoinAndSelect(
+        "question.versions",
+        "versions",
+      )
+      .leftJoinAndSelect(
+        "versions.options",
+        "versionOptions",
+      )
+      .leftJoinAndSelect(
         "quizQuestions.questionVersion",
         "questionVersion",
+      )
+      .leftJoinAndSelect(
+        "questionVersion.options",
+        "options",
       )
       .leftJoinAndSelect(
         "quiz.attempts",
@@ -67,8 +79,20 @@ export class QuizRepository {
         "question",
       )
       .leftJoinAndSelect(
+        "question.versions",
+        "versions",
+      )
+      .leftJoinAndSelect(
+        "versions.options",
+        "versionOptions",
+      )
+      .leftJoinAndSelect(
         "quizQuestions.questionVersion",
         "questionVersion",
+      )
+      .leftJoinAndSelect(
+        "questionVersion.options",
+        "options",
       )
       .leftJoinAndSelect(
         "quiz.attempts",

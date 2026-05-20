@@ -12,73 +12,32 @@ export class AttemptAnswerRepository {
   private repository: Repository<AttemptAnswer>;
 
   constructor() {
-    this.repository =
-      AppDataSource.getRepository(
-        AttemptAnswer,
-      );
+    this.repository = AppDataSource.getRepository(AttemptAnswer);
   }
 
-  async findAll(): Promise<
-    AttemptAnswer[]
-  > {
+  async findAll(): Promise<AttemptAnswer[]> {
     return this.repository
-      .createQueryBuilder(
-        "attemptAnswer",
-      )
-      .leftJoinAndSelect(
-        "attemptAnswer.attempt",
-        "attempt",
-      )
-      .leftJoinAndSelect(
-        "attemptAnswer.question",
-        "question",
-      )
-      .leftJoinAndSelect(
-        "attemptAnswer.questionVersion",
-        "questionVersion",
-      )
-      .leftJoinAndSelect(
-        "attemptAnswer.selectedOptions",
-        "selectedOptions",
-      )
+      .createQueryBuilder("attemptAnswer")
+      .leftJoinAndSelect("attemptAnswer.attempt", "attempt")
+      .leftJoinAndSelect("attemptAnswer.question", "question")
+      .leftJoinAndSelect("attemptAnswer.questionVersion", "questionVersion")
+      .leftJoinAndSelect("attemptAnswer.selectedOptions", "selectedOptions")
       .getMany();
   }
 
-  async findById(
-    id: string,
-  ): Promise<AttemptAnswer | null> {
+  async findById(id: string): Promise<AttemptAnswer | null> {
     return this.repository
-      .createQueryBuilder(
-        "attemptAnswer",
-      )
-      .leftJoinAndSelect(
-        "attemptAnswer.attempt",
-        "attempt",
-      )
-      .leftJoinAndSelect(
-        "attemptAnswer.question",
-        "question",
-      )
-      .leftJoinAndSelect(
-        "attemptAnswer.questionVersion",
-        "questionVersion",
-      )
-      .leftJoinAndSelect(
-        "attemptAnswer.selectedOptions",
-        "selectedOptions",
-      )
-      .where(
-        "attemptAnswer.publicId = :id",
-        { id },
-      )
+      .createQueryBuilder("attemptAnswer")
+      .leftJoinAndSelect("attemptAnswer.attempt", "attempt")
+      .leftJoinAndSelect("attemptAnswer.question", "question")
+      .leftJoinAndSelect("attemptAnswer.questionVersion", "questionVersion")
+      .leftJoinAndSelect("attemptAnswer.selectedOptions", "selectedOptions")
+      .where("attemptAnswer.publicId = :id", { id })
       .getOne();
   }
 
-  async create(
-    data: Partial<AttemptAnswer>,
-  ): Promise<AttemptAnswer> {
-    const item =
-      this.repository.create(data);
+  async create(data: Partial<AttemptAnswer>): Promise<AttemptAnswer> {
+    const item = this.repository.create(data);
 
     return this.repository.save(item);
   }
@@ -92,24 +51,18 @@ export class AttemptAnswerRepository {
         publicId: id,
       },
       {
-        answerText:
-          data.answerText,
+        answerText: data.answerText,
       },
     );
 
     return this.findById(id);
   }
 
-  async delete(
-    id: string,
-  ): Promise<boolean> {
-    const result =
-      await this.repository.delete({
-        publicId: id,
-      });
+  async delete(id: string): Promise<boolean> {
+    const result = await this.repository.delete({
+      publicId: id,
+    });
 
-    return (
-      (result.affected ?? 0) > 0
-    );
+    return (result.affected ?? 0) > 0;
   }
 }

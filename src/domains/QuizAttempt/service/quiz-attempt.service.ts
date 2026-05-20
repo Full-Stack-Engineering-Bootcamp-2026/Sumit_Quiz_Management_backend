@@ -66,6 +66,14 @@ export class QuizAttemptService {
               answer.questionVersion
                 .publicId,
 
+            questionText:
+              answer.questionVersion
+                .questionText,
+
+            answerType:
+              answer.questionVersion
+                .answerType,
+
             answerText:
               answer.answerText,
 
@@ -75,6 +83,22 @@ export class QuizAttemptService {
                   option
                     .questionOption
                     .publicId,
+              ) || [],
+
+            selectedOptions:
+              answer.selectedOptions?.map(
+                (option) => ({
+                  id: option.questionOption
+                    .publicId,
+
+                  optionText:
+                    option.questionOption
+                      .optionText,
+
+                  isCorrect:
+                    option.questionOption
+                      .isCorrect,
+                }),
               ) || [],
           }),
         ) || [],
@@ -196,14 +220,21 @@ export class QuizAttemptService {
             )
             .getCount();
 
+        const user = await manager.findOne(User, {
+          where: {
+            publicId: data.userId,
+          },
+        });
+
+        if (!user) {
+          throw new NotFoundException("User not found");
+        }
+
         const attempt =
           manager.create(
             QuizAttempt,
             {
-              user: {
-                publicId:
-                  data.userId,
-              } as User,
+              user,
 
               quiz,
 
@@ -369,20 +400,18 @@ export class QuizAttemptService {
               selectedOptionIds.map(
                 (
                   optionId,
-                ) =>
-                  manager.create(
+                ) => {
+                  const opt = questionOptions.find(o => o.publicId === optionId);
+                  return manager.create(
                     AttemptAnswerOption,
                     {
                       attemptAnswer:
                         savedAnswer,
 
-                      questionOption:
-                        {
-                          publicId:
-                            optionId,
-                        } as QuestionOption,
+                      questionOption: opt!,
                     },
-                  ),
+                  );
+                }
               );
 
             const savedSelectedOptions =

@@ -22,62 +22,39 @@ export class AttemptAnswerService {
     private readonly logger: LoggerService,
   ) {}
 
-  private mapToDto(
-    item: AttemptAnswer,
-  ): AttemptAnswerOutDto {
+  private mapToDto(item: AttemptAnswer): AttemptAnswerOutDto {
     return {
       id: item.publicId,
 
-      attemptId:
-        item.attempt.publicId,
+      attemptId: item.attempt.publicId,
 
-      questionId:
-        item.question.publicId,
+      questionId: item.question.publicId,
 
-      questionVersionId:
-        item.questionVersion.publicId,
+      questionVersionId: item.questionVersion.publicId,
 
-      answerText:
-        item.answerText,
+      answerText: item.answerText,
 
       selectedOptions:
-        item.selectedOptions?.map(
-          (option) =>
-            option.questionOption
-              .publicId,
-        ) || [],
+        item.selectedOptions?.map((option) => option.questionOption.publicId) ||
+        [],
     };
   }
 
-  public async getAll(): Promise<
-    AttemptAnswerOutDto[]
-  > {
-    this.logger.debug(
-      "Fetching all attempt answers",
-    );
+  public async getAll(): Promise<AttemptAnswerOutDto[]> {
+    this.logger.debug("Fetching all attempt answers");
 
-    const items =
-      await this.repository.findAll();
+    const items = await this.repository.findAll();
 
-    return items.map((item) =>
-      this.mapToDto(item),
-    );
+    return items.map((item) => this.mapToDto(item));
   }
 
-  public async getById(
-    id: string,
-  ): Promise<AttemptAnswerOutDto> {
-    this.logger.debug(
-      `Fetching attempt answer with ID: ${id}`,
-    );
+  public async getById(id: string): Promise<AttemptAnswerOutDto> {
+    this.logger.debug(`Fetching attempt answer with ID: ${id}`);
 
-    const item =
-      await this.repository.findById(id);
+    const item = await this.repository.findById(id);
 
     if (!item) {
-      throw new NotFoundException(
-        `Attempt answer with ID ${id} not found`,
-      );
+      throw new NotFoundException(`Attempt answer with ID ${id} not found`);
     }
 
     return this.mapToDto(item);
@@ -86,15 +63,11 @@ export class AttemptAnswerService {
   public async create(
     data: CreateAttemptAnswerDto,
   ): Promise<AttemptAnswerOutDto> {
-    this.logger.info(
-      "Creating new attempt answer",
-    );
+    this.logger.info("Creating new attempt answer");
 
-    const item =
-      await this.repository.create({
-        answerText:
-          data.answerText,
-      });
+    const item = await this.repository.create({
+      answerText: data.answerText,
+    });
 
     return this.mapToDto(item);
   }
@@ -103,44 +76,26 @@ export class AttemptAnswerService {
     id: string,
     data: UpdateAttemptAnswerDto,
   ): Promise<AttemptAnswerOutDto> {
-    this.logger.info(
-      `Updating attempt answer: ${id}`,
-    );
+    this.logger.info(`Updating attempt answer: ${id}`);
 
-    const existing =
-      await this.repository.findById(id);
+    const existing = await this.repository.findById(id);
 
     if (!existing) {
-      throw new NotFoundException(
-        `Attempt answer with ID ${id} not found`,
-      );
+      throw new NotFoundException(`Attempt answer with ID ${id} not found`);
     }
 
-    const updated =
-      await this.repository.update(
-        id,
-        data,
-      );
+    const updated = await this.repository.update(id, data);
 
-    return this.mapToDto(
-      updated as AttemptAnswer,
-    );
+    return this.mapToDto(updated as AttemptAnswer);
   }
 
-  public async delete(
-    id: string,
-  ): Promise<void> {
-    this.logger.info(
-      `Deleting attempt answer: ${id}`,
-    );
+  public async delete(id: string): Promise<void> {
+    this.logger.info(`Deleting attempt answer: ${id}`);
 
-    const existing =
-      await this.repository.findById(id);
+    const existing = await this.repository.findById(id);
 
     if (!existing) {
-      throw new NotFoundException(
-        `Attempt answer with ID ${id} not found`,
-      );
+      throw new NotFoundException(`Attempt answer with ID ${id} not found`);
     }
 
     await this.repository.delete(id);
