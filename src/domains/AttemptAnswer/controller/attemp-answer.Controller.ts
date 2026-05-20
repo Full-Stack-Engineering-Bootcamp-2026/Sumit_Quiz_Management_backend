@@ -16,16 +16,10 @@ import { generateResponse } from "../../../common/utils/response.util";
 
 @Service()
 export class AttemptAnswerController {
-  constructor(
-    private readonly service: AttemptAnswerService,
-  ) {}
+  constructor(private readonly service: AttemptAnswerService) {}
 
-  public async getAll(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    const data =
-      await this.service.getAll();
+  public async getAll(req: Request, res: Response): Promise<Response> {
+    const data = await this.service.getAll();
 
     return generateResponse(res, {
       statusCode: HttpStatus.OK,
@@ -33,14 +27,8 @@ export class AttemptAnswerController {
     });
   }
 
-  public async getById(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    const data =
-      await this.service.getById(
-        req.params.id as string,
-      );
+  public async getById(req: Request, res: Response): Promise<Response> {
+    const data = await this.service.getById(req.params.id as string);
 
     return generateResponse(res, {
       statusCode: HttpStatus.OK,
@@ -48,14 +36,8 @@ export class AttemptAnswerController {
     });
   }
 
-  public async create(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    const data =
-      await this.service.create(
-        req.body as CreateAttemptAnswerDto,
-      );
+  public async create(req: Request, res: Response): Promise<Response> {
+    const data = await this.service.create(req.body as CreateAttemptAnswerDto);
 
     return generateResponse(res, {
       statusCode: HttpStatus.CREATED,
@@ -64,15 +46,11 @@ export class AttemptAnswerController {
     });
   }
 
-  public async update(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    const data =
-      await this.service.update(
-        req.params.id as string,
-        req.body as UpdateAttemptAnswerDto,
-      );
+  public async update(req: Request, res: Response): Promise<Response> {
+    const data = await this.service.update(
+      req.params.id as string,
+      req.body as UpdateAttemptAnswerDto,
+    );
 
     return generateResponse(res, {
       statusCode: HttpStatus.OK,
@@ -81,13 +59,8 @@ export class AttemptAnswerController {
     });
   }
 
-  public async delete(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    await this.service.delete(
-      req.params.id as string,
-    );
+  public async delete(req: Request, res: Response): Promise<Response> {
+    await this.service.delete(req.params.id as string);
 
     return generateResponse(res, {
       statusCode: HttpStatus.OK,

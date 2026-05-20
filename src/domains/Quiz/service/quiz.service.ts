@@ -33,26 +33,65 @@ export class QuizService {
   private mapToDto(
     item: Quiz,
   ): QuizOutDto {
+    const seen = new Set<string>();
+    const uniqueQuizQuestions = (item.quizQuestions || []).filter((qq) => {
+      const qId = qq.question?.publicId;
+      if (!qId || seen.has(qId)) return false;
+      seen.add(qId);
+      return true;
+    });
+
     return {
       id: item.publicId,
 
       title: item.title,
 
       createdById:
-        item.createdBy.publicId,
+        item.createdBy?.publicId || "",
 
       questions:
-        item.quizQuestions?.map(
-          (quizQuestion) => ({
-            questionId:
-              quizQuestion.question
-                .publicId,
+        uniqueQuizQuestions.map(
+          (quizQuestion) => {
+            const latestVersion =
+              quizQuestion.question?.versions?.sort(
+                (a, b) =>
+                  b.versionNumber -
+                  a.versionNumber,
+              )[0] || quizQuestion.questionVersion;
 
-            questionVersionId:
-              quizQuestion
-                .questionVersion
-                .publicId,
-          }),
+            return {
+              questionId:
+                quizQuestion.question
+                  .publicId,
+
+              questionVersionId:
+                latestVersion
+                  .publicId,
+
+              versionNumber:
+                latestVersion
+                  .versionNumber,
+
+              questionText:
+                latestVersion
+                  .questionText,
+
+              answerType:
+                latestVersion
+                  .answerType,
+
+              options:
+                latestVersion
+                  .options?.map(
+                    (option) => ({
+                      id: option.publicId,
+
+                      optionText:
+                        option.optionText,
+                    }),
+                  ) || [],
+            };
+          },
         ) || [],
 
       createdAt:
@@ -107,6 +146,16 @@ export class QuizService {
 
     return AppDataSource.transaction(
       async (manager) => {
+        const user = await manager.findOne(User, {
+          where: {
+            publicId: data.createdById,
+          },
+        });
+
+        if (!user) {
+          throw new NotFoundException("User not found");
+        }
+
         const quiz =
           manager.create(
             Quiz,
@@ -114,10 +163,7 @@ export class QuizService {
               title:
                 data.title,
 
-              createdBy: {
-                publicId:
-                  data.createdById,
-              } as User,
+              createdBy: user,
             },
           );
 
@@ -137,9 +183,10 @@ export class QuizService {
               "question",
             )
             .where(
-              "questionVersion.publicId IN (:...ids)",
+              "questionVersion.publicId IN (:...ids) OR (question.publicId IN (:...ids) AND questionVersion.isActive = :isActive)",
               {
                 ids: data.questionVersionIds,
+                isActive: true,
               },
             )
             .getMany();
@@ -229,9 +276,10 @@ export class QuizService {
                 "question",
               )
               .where(
-                "questionVersion.publicId IN (:...ids)",
+                "questionVersion.publicId IN (:...ids) OR (question.publicId IN (:...ids) AND questionVersion.isActive = :isActive)",
                 {
                   ids: data.questionVersionIds,
+                  isActive: true,
                 },
               )
               .getMany();

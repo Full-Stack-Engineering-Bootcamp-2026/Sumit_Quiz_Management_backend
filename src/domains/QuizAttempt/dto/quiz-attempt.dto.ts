@@ -12,9 +12,19 @@ export interface QuizAttemptOutDto {
 
     questionVersionId: string;
 
+    questionText: string;
+
+    answerType: string;
+
     answerText?: string;
 
     selectedOptionIds?: string[];
+
+    selectedOptions?: {
+      id: string;
+      optionText: string;
+      isCorrect: boolean;
+    }[];
   }[];
 
   submittedAt: Date;

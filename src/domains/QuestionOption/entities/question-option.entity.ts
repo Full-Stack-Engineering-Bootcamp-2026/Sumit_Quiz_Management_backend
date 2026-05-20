@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 
 import { QuestionVersion } from "../../QuestionVersion/entities/question-version.entity";
+
 import { AttemptAnswerOption } from "../../AttemptAnswerOption/entities/attempt-answer-option.entity";
 
 @Entity("question_options")
@@ -16,13 +17,16 @@ export class QuestionOption {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column({
+    unique: true,
+  })
   @Generated("uuid")
   publicId: string;
 
   @ManyToOne(
     () => QuestionVersion,
-    (questionVersion) => questionVersion.options,
+    (questionVersion) =>
+      questionVersion.options,
     {
       nullable: false,
       onDelete: "CASCADE",
@@ -36,9 +40,16 @@ export class QuestionOption {
   })
   optionText: string;
 
+  @Column({
+    type: "boolean",
+    default: false,
+  })
+  isCorrect: boolean;
+
   @OneToMany(
     () => AttemptAnswerOption,
-    (attemptAnswerOption) => attemptAnswerOption.questionOption,
+    (attemptAnswerOption) =>
+      attemptAnswerOption.questionOption,
   )
   selectedInAnswers: AttemptAnswerOption[];
 

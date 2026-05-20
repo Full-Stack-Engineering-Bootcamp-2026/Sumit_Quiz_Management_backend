@@ -16,6 +16,8 @@ import { QuestionOption } from "../../QuestionOption/entities/question-option.en
 
 import { User } from "../../User/entities/user.entity";
 
+import { AnswerType } from "../../QuestionVersion/entities/question-version.entity";
+
 import {
   QuestionOutDto,
   CreateQuestionDto,
@@ -30,287 +32,205 @@ export class QuestionService {
     private readonly logger: LoggerService,
   ) {}
 
-  private mapToDto(
-    item: Question,
-  ): QuestionOutDto {
-    const latestVersion =
-      item.versions?.sort(
-        (a, b) =>
-          b.versionNumber -
-          a.versionNumber,
-      )[0];
+  private mapToDto(item: Question): QuestionOutDto {
+    const latestVersion = item.versions?.sort(
+      (a, b) => b.versionNumber - a.versionNumber,
+    )[0];
 
     return {
       id: item.publicId,
 
-      createdById:
-        item.createdBy.publicId,
+      createdById: item.createdBy.publicId,
 
-      questionText:
-        latestVersion?.questionText ||
-        "",
+      questionText: latestVersion?.questionText || "",
 
-      answerType:
-        latestVersion?.answerType,
+      answerType: latestVersion?.answerType,
 
-      versionNumber:
-        latestVersion?.versionNumber ||
-        1,
+      versionNumber: latestVersion?.versionNumber || 1,
 
       options:
-        latestVersion?.options?.map(
-          (option) =>
-            option.optionText,
-        ) || [],
+        latestVersion?.options?.map((option) => ({
+          id: option.publicId,
 
-      createdAt:
-        item.createdAt,
+          optionText: option.optionText,
+
+          isCorrect: option.isCorrect,
+        })) || [],
+
+      createdAt: item.createdAt,
+
+      history:
+        item.versions?.map((v) => ({
+          versionNumber: v.versionNumber,
+
+          questionText: v.questionText,
+
+          answerType: v.answerType,
+
+          createdAt: v.createdAt,
+
+          options:
+            v.options?.map((option) => ({
+              id: option.publicId,
+
+              optionText: option.optionText,
+
+              isCorrect: option.isCorrect,
+            })) || [],
+        })) || [],
     };
   }
 
-  public async getAll(): Promise<
-    QuestionOutDto[]
-  > {
-    this.logger.debug(
-      "Fetching all questions",
-    );
+  public async getAll(): Promise<QuestionOutDto[]> {
+    this.logger.debug("Fetching all questions");
 
-    const items =
-      await this.repository.findAll();
+    const items = await this.repository.findAll();
 
-    return items.map((item) =>
-      this.mapToDto(item),
-    );
+    return items.map((item) => this.mapToDto(item));
   }
 
-  public async getById(
-    id: string,
-  ): Promise<QuestionOutDto> {
-    this.logger.debug(
-      `Fetching question with ID: ${id}`,
-    );
+  public async getById(id: string): Promise<QuestionOutDto> {
+    this.logger.debug(`Fetching question with ID: ${id}`);
 
-    const item =
-      await this.repository.findById(id);
+    const item = await this.repository.findById(id);
 
     if (!item) {
-      throw new NotFoundException(
-        `Question with ID ${id} not found`,
-      );
+      throw new NotFoundException(`Question with ID ${id} not found`);
     }
 
     return this.mapToDto(item);
   }
 
-  public async create(
-    data: CreateQuestionDto,
-  ): Promise<QuestionOutDto> {
-    this.logger.info(
-      "Creating question",
-    );
+  public async create(data: CreateQuestionDto): Promise<QuestionOutDto> {
+    this.logger.info("Creating question");
 
-    return AppDataSource.transaction(
-      async (
-        transactionalEntityManager,
-      ) => {
-        const question =
-          transactionalEntityManager.create(
-            Question,
-            {
-              createdBy: {
-                publicId:
-                  data.createdById,
-              } as User,
-            },
-          );
+    return AppDataSource.transaction(async (transactionalEntityManager) => {
+      const userRepository = transactionalEntityManager.getRepository(User);
 
-        const savedQuestion =
-          await transactionalEntityManager.save(
-            question,
-          );
+      const user = await userRepository.findOne({
+        where: {
+          publicId: data.createdById,
+        },
+      });
 
-        const questionVersion =
-          transactionalEntityManager.create(
-            QuestionVersion,
-            {
-              question:
-                savedQuestion,
+      if (!user) {
+        throw new NotFoundException("User not found");
+      }
 
-              versionNumber: 1,
+      const question = transactionalEntityManager.create(Question, {
+        createdBy: user,
+      });
 
-              questionText:
-                data.questionText,
+      const savedQuestion = await transactionalEntityManager.save(question);
 
-              answerType:
-                data.answerType,
-            },
-          );
+      const questionVersion = transactionalEntityManager.create(
+        QuestionVersion,
+        {
+          question: savedQuestion,
 
-        const savedVersion =
-          await transactionalEntityManager.save(
-            questionVersion,
-          );
+          versionNumber: 1,
 
-        if (
-          data.options &&
-          data.options.length > 0
-        ) {
-          const options =
-            data.options.map(
-              (
-                optionText: string,
-              ) =>
-                transactionalEntityManager.create(
-                  QuestionOption,
-                  {
-                    questionVersion:
-                      savedVersion,
+          questionText: data.questionText,
 
-                    optionText:
-                      optionText,
-                  },
-                ),
-            );
+          answerType: data.answerType,
 
-          const savedOptions =
-            await transactionalEntityManager.save(
-              options,
-            );
+          isActive: true,
+        },
+      );
 
-          savedVersion.options =
-            savedOptions;
-        }
+      const savedVersion =
+        await transactionalEntityManager.save(questionVersion);
 
-        savedQuestion.versions = [
-          savedVersion,
-        ];
+      if (data.options && data.options.length > 0) {
+        const options = data.options.map((option) =>
+          transactionalEntityManager.create(QuestionOption, {
+            questionVersion: savedVersion,
 
-        return this.mapToDto(
-          savedQuestion,
+            optionText: option.optionText,
+
+            isCorrect: option.isCorrect || false,
+          }),
         );
-      },
-    );
+
+        const savedOptions = await transactionalEntityManager.save(options);
+
+        savedVersion.options = savedOptions;
+      }
+
+      savedQuestion.versions = [savedVersion];
+
+      savedQuestion.createdBy = user;
+
+      return this.mapToDto(savedQuestion);
+    });
   }
 
   public async update(
     id: string,
     data: UpdateQuestionDto,
   ): Promise<QuestionOutDto> {
-    this.logger.info(
-      `Creating new version for question: ${id}`,
-    );
+    this.logger.info(`Creating new version for question: ${id}`);
 
-    const existing =
-      await this.repository.findById(id);
+    const existing = await this.repository.findById(id);
 
     if (!existing) {
-      throw new NotFoundException(
-        `Question with ID ${id} not found`,
-      );
+      throw new NotFoundException(`Question with ID ${id} not found`);
     }
 
-    const latestVersion =
-      existing.versions?.sort(
-        (a, b) =>
-          b.versionNumber -
-          a.versionNumber,
-      )[0];
+    const latestVersion = existing.versions?.sort(
+      (a, b) => b.versionNumber - a.versionNumber,
+    )[0];
 
-    const nextVersionNumber =
-      latestVersion
-        ? latestVersion.versionNumber +
-          1
-        : 1;
+    const nextVersionNumber = latestVersion
+      ? latestVersion.versionNumber + 1
+      : 1;
 
-    return AppDataSource.transaction(
-      async (
-        transactionalEntityManager,
-      ) => {
-        const newVersion =
-          transactionalEntityManager.create(
-            QuestionVersion,
-            {
-              question:
-                existing,
+    return AppDataSource.transaction(async (transactionalEntityManager) => {
+      const newVersion = transactionalEntityManager.create(QuestionVersion, {
+        question: existing,
 
-              versionNumber:
-                nextVersionNumber,
+        versionNumber: nextVersionNumber,
 
-              questionText:
-                data.questionText,
+        questionText: data.questionText,
 
-              answerType:
-                data.answerType,
+        answerType: data.answerType,
 
-              isActive: true,
-            },
-          );
+        isActive: true,
+      });
 
-        const savedVersion =
-          await transactionalEntityManager.save(
-            newVersion,
-          );
+      const savedVersion = await transactionalEntityManager.save(newVersion);
 
-        if (
-          data.options &&
-          data.options.length > 0
-        ) {
-          const options =
-            data.options.map(
-              (
-                optionText: string,
-              ) =>
-                transactionalEntityManager.create(
-                  QuestionOption,
-                  {
-                    questionVersion:
-                      savedVersion,
+      if (data.options && data.options.length > 0) {
+        const options = data.options.map((option) =>
+          transactionalEntityManager.create(QuestionOption, {
+            questionVersion: savedVersion,
 
-                    optionText:
-                      optionText,
-                  },
-                ),
-            );
+            optionText: option.optionText,
 
-          const savedOptions =
-            await transactionalEntityManager.save(
-              options,
-            );
-
-          savedVersion.options =
-            savedOptions;
-        }
-
-        existing.versions = [
-          ...existing.versions,
-          savedVersion,
-        ];
-
-        return this.mapToDto(
-          existing,
+            isCorrect: option.isCorrect || false,
+          }),
         );
-      },
-    );
+
+        const savedOptions = await transactionalEntityManager.save(options);
+
+        savedVersion.options = savedOptions;
+      }
+
+      existing.versions = [...existing.versions, savedVersion];
+
+      return this.mapToDto(existing);
+    });
   }
 
-  public async delete(
-    id: string,
-  ): Promise<void> {
-    this.logger.info(
-      `Deleting question: ${id}`,
-    );
+  public async delete(id: string): Promise<void> {
+    this.logger.info(`Deleting question: ${id}`);
 
-    const existing =
-      await this.repository.findById(id);
+    const existing = await this.repository.findById(id);
 
     if (!existing) {
-      throw new NotFoundException(
-        `Question with ID ${id} not found`,
-      );
+      throw new NotFoundException(`Question with ID ${id} not found`);
     }
 
-    await this.repository.delete(
-      id,
-    );
+    await this.repository.delete(id);
   }
 }

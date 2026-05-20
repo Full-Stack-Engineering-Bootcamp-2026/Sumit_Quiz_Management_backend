@@ -13,16 +13,10 @@ import { generateResponse } from "../../../common/utils/response.util";
 
 @Service()
 export class AttemptAnswerOptionController {
-  constructor(
-    private readonly service: AttemptAnswerOptionService,
-  ) {}
+  constructor(private readonly service: AttemptAnswerOptionService) {}
 
-  public async getAll(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    const data =
-      await this.service.getAll();
+  public async getAll(req: Request, res: Response): Promise<Response> {
+    const data = await this.service.getAll();
 
     return generateResponse(res, {
       statusCode: HttpStatus.OK,
@@ -30,14 +24,8 @@ export class AttemptAnswerOptionController {
     });
   }
 
-  public async getById(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    const data =
-      await this.service.getById(
-        req.params.id as string,
-      );
+  public async getById(req: Request, res: Response): Promise<Response> {
+    const data = await this.service.getById(req.params.id as string);
 
     return generateResponse(res, {
       statusCode: HttpStatus.OK,
@@ -45,14 +33,10 @@ export class AttemptAnswerOptionController {
     });
   }
 
-  public async create(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    const data =
-      await this.service.create(
-        req.body as CreateAttemptAnswerOptionDto,
-      );
+  public async create(req: Request, res: Response): Promise<Response> {
+    const data = await this.service.create(
+      req.body as CreateAttemptAnswerOptionDto,
+    );
 
     return generateResponse(res, {
       statusCode: HttpStatus.CREATED,
@@ -61,13 +45,8 @@ export class AttemptAnswerOptionController {
     });
   }
 
-  public async delete(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    await this.service.delete(
-      req.params.id as string,
-    );
+  public async delete(req: Request, res: Response): Promise<Response> {
+    await this.service.delete(req.params.id as string);
 
     return generateResponse(res, {
       statusCode: HttpStatus.OK,

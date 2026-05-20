@@ -20,99 +20,69 @@ export class QuizAttemptRepository {
   async findAll(): Promise<
     QuizAttempt[]
   > {
-    return this.repository
-      .createQueryBuilder(
-        "quizAttempt",
-      )
-      .leftJoinAndSelect(
-        "quizAttempt.user",
-        "user",
-      )
-      .leftJoinAndSelect(
-        "quizAttempt.quiz",
-        "quiz",
-      )
-      .leftJoinAndSelect(
-        "quizAttempt.answers",
-        "answers",
-      )
-      .leftJoinAndSelect(
-        "answers.question",
-        "question",
-      )
-      .leftJoinAndSelect(
-        "answers.questionVersion",
-        "questionVersion",
-      )
-      .leftJoinAndSelect(
-        "answers.selectedOptions",
-        "selectedOptions",
-      )
-      .leftJoinAndSelect(
-        "selectedOptions.questionOption",
-        "questionOption",
-      )
-      .getMany();
+    return await this.repository.find(
+      {
+        relations: {
+          user: true,
+          quiz: true,
+          answers: {
+            question: true,
+            questionVersion: true,
+            selectedOptions: {
+              questionOption: true,
+            },
+          },
+        },
+      },
+    );
   }
 
   async findById(
     id: string,
   ): Promise<QuizAttempt | null> {
-    return this.repository
-      .createQueryBuilder(
-        "quizAttempt",
-      )
-      .leftJoinAndSelect(
-        "quizAttempt.user",
-        "user",
-      )
-      .leftJoinAndSelect(
-        "quizAttempt.quiz",
-        "quiz",
-      )
-      .leftJoinAndSelect(
-        "quizAttempt.answers",
-        "answers",
-      )
-      .leftJoinAndSelect(
-        "answers.question",
-        "question",
-      )
-      .leftJoinAndSelect(
-        "answers.questionVersion",
-        "questionVersion",
-      )
-      .leftJoinAndSelect(
-        "answers.selectedOptions",
-        "selectedOptions",
-      )
-      .leftJoinAndSelect(
-        "selectedOptions.questionOption",
-        "questionOption",
-      )
-      .where(
-        "quizAttempt.publicId = :id",
-        { id },
-      )
-      .getOne();
+    return await this.repository.findOne(
+      {
+        where: {
+          publicId: id,
+        },
+
+        relations: {
+          user: true,
+          quiz: true,
+          answers: {
+            question: true,
+            questionVersion: true,
+            selectedOptions: {
+              questionOption: true,
+            },
+          },
+        },
+      },
+    );
   }
 
   async create(
     data: Partial<QuizAttempt>,
   ): Promise<QuizAttempt> {
     const item =
-      this.repository.create(data);
+      this.repository.create(
+        data,
+      );
 
-    return this.repository.save(item);
+    return await this.repository.save(
+      item,
+    );
   }
 
   async delete(
     id: string,
   ): Promise<boolean> {
     const result =
-      await this.repository.delete({
-        publicId: id,
-      });
+      await this.repository.delete(
+        {
+          publicId: id,
+        },
+      );
 
     return (
       (result.affected ?? 0) > 0

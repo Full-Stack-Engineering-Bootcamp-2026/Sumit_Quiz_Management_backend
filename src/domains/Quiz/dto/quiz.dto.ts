@@ -1,3 +1,23 @@
+import { AnswerType } from "../../QuestionVersion/entities/question-version.entity";
+
+export interface QuizQuestionDetailsDto {
+  questionId: string;
+
+  questionVersionId: string;
+
+  versionNumber: number;
+
+  questionText: string;
+
+  answerType: AnswerType;
+
+  options: {
+    id: string;
+
+    optionText: string;
+  }[];
+}
+
 export interface QuizOutDto {
   id: string;
 
@@ -5,11 +25,7 @@ export interface QuizOutDto {
 
   createdById: string;
 
-  questions: {
-    questionId: string;
-
-    questionVersionId: string;
-  }[];
+  questions: QuizQuestionDetailsDto[];
 
   createdAt: Date;
 }
@@ -26,4 +42,4 @@ export interface UpdateQuizDto {
   title?: string;
 
   questionVersionIds?: string[];
-} 
+}
