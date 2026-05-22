@@ -33,11 +33,24 @@ export class QuizService {
   private mapToDto(
     item: Quiz,
   ): QuizOutDto {
-    const seen = new Set<string>();
-    const uniqueQuizQuestions = (item.quizQuestions || []).filter((qq) => {
-      const qId = qq.question?.publicId;
-      if (!qId || seen.has(qId)) return false;
+    const seen =
+      new Set<string>();
+
+    const uniqueQuizQuestions = (
+      item.quizQuestions || []
+    ).filter((qq) => {
+      const qId =
+        qq.question?.publicId;
+
+      if (
+        !qId ||
+        seen.has(qId)
+      ) {
+        return false;
+      }
+
       seen.add(qId);
+
       return true;
     });
 
@@ -47,49 +60,46 @@ export class QuizService {
       title: item.title,
 
       createdById:
-        item.createdBy?.publicId || "",
+        item.createdBy
+          ?.publicId || "",
 
       questions:
         uniqueQuizQuestions.map(
-          (quizQuestion) => {
-            const latestVersion =
-              quizQuestion.question?.versions?.sort(
-                (a, b) =>
-                  b.versionNumber -
-                  a.versionNumber,
-              )[0] || quizQuestion.questionVersion;
+          (
+            quizQuestion,
+          ) => {
+            const version =
+              quizQuestion.questionVersion;
 
             return {
               questionId:
-                quizQuestion.question
+                quizQuestion
+                  .question
                   .publicId,
 
               questionVersionId:
-                latestVersion
-                  .publicId,
+                version.publicId,
 
               versionNumber:
-                latestVersion
-                  .versionNumber,
+                version.versionNumber,
 
               questionText:
-                latestVersion
-                  .questionText,
+                version.questionText,
 
               answerType:
-                latestVersion
-                  .answerType,
+                version.answerType,
 
               options:
-                latestVersion
-                  .options?.map(
-                    (option) => ({
-                      id: option.publicId,
+                version.options?.map(
+                  (
+                    option,
+                  ) => ({
+                    id: option.publicId,
 
-                      optionText:
-                        option.optionText,
-                    }),
-                  ) || [],
+                    optionText:
+                      option.optionText,
+                  }),
+                ) || [],
             };
           },
         ) || [],
@@ -109,8 +119,11 @@ export class QuizService {
     const quizzes =
       await this.repository.findAll();
 
-    return quizzes.map((quiz) =>
-      this.mapToDto(quiz),
+    return quizzes.map(
+      (quiz) =>
+        this.mapToDto(
+          quiz,
+        ),
     );
   }
 
@@ -146,14 +159,21 @@ export class QuizService {
 
     return AppDataSource.transaction(
       async (manager) => {
-        const user = await manager.findOne(User, {
-          where: {
-            publicId: data.createdById,
-          },
-        });
+        const user =
+          await manager.findOne(
+            User,
+            {
+              where: {
+                publicId:
+                  data.createdById,
+              },
+            },
+          );
 
         if (!user) {
-          throw new NotFoundException("User not found");
+          throw new NotFoundException(
+            "User not found",
+          );
         }
 
         const quiz =
@@ -163,7 +183,8 @@ export class QuizService {
               title:
                 data.title,
 
-              createdBy: user,
+              createdBy:
+                user,
             },
           );
 
@@ -182,18 +203,23 @@ export class QuizService {
               "questionVersion.question",
               "question",
             )
+            .leftJoinAndSelect(
+              "questionVersion.options",
+              "options",
+            )
             .where(
-              "questionVersion.publicId IN (:...ids) OR (question.publicId IN (:...ids) AND questionVersion.isActive = :isActive)",
+              "questionVersion.publicId IN (:...ids)",
               {
                 ids: data.questionVersionIds,
-                isActive: true,
               },
             )
             .getMany();
 
         const quizQuestions =
           questionVersions.map(
-            (questionVersion) =>
+            (
+              questionVersion,
+            ) =>
               manager.create(
                 QuizQuestion,
                 {
@@ -208,16 +234,17 @@ export class QuizService {
               ),
           );
 
-        const savedMappings =
-          await manager.save(
-            quizQuestions,
+        await manager.save(
+          quizQuestions,
+        );
+
+        const createdQuiz =
+          await this.repository.findById(
+            savedQuiz.publicId,
           );
 
-        savedQuiz.quizQuestions =
-          savedMappings;
-
         return this.mapToDto(
-          savedQuiz,
+          createdQuiz!,
         );
       },
     );
@@ -275,11 +302,14 @@ export class QuizService {
                 "questionVersion.question",
                 "question",
               )
+              .leftJoinAndSelect(
+                "questionVersion.options",
+                "options",
+              )
               .where(
-                "questionVersion.publicId IN (:...ids) OR (question.publicId IN (:...ids) AND questionVersion.isActive = :isActive)",
+                "questionVersion.publicId IN (:...ids)",
                 {
                   ids: data.questionVersionIds,
-                  isActive: true,
                 },
               )
               .getMany();
@@ -303,17 +333,18 @@ export class QuizService {
                 ),
             );
 
-          const savedMappings =
-            await manager.save(
-              quizQuestions,
-            );
-
-          existingQuiz.quizQuestions =
-            savedMappings;
+          await manager.save(
+            quizQuestions,
+          );
         }
 
+        const updatedQuiz =
+          await this.repository.findById(
+            existingQuiz.publicId,
+          );
+
         return this.mapToDto(
-          existingQuiz,
+          updatedQuiz!,
         );
       },
     );
